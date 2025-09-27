@@ -1,0 +1,40 @@
+# Claude Code settings
+.claude/
+
+# Video files (too large for git)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.m3u8
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/

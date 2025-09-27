@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .api-config {
+            background: #fffbf0;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .api-config input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+        }
+
+        #status.show {
+            display: block;
+        }
+
+        #status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        #status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        #status.processing {
+            background: #cce5ff;
+            border: 1px solid #b8daff;
+            color: #004085;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Downloader</h1>
+        <p class="subtitle">Download videos using your Render.com API</p>
+
+        <div class="api-config" style="display: none;">
+            <strong>⚙️ API Configuration</strong>
+            <input type="text"
+                   id="apiUrl"
+                   placeholder="https://your-app.onrender.com"
+                   value="https://video-downloader-kqjq.onrender.com">
+            <div class="example">Enter your Render.com app URL</div>
+        </div>
+
+        <div style="text-align: right; margin-bottom: 10px;">
+            <a href="#" onclick="toggleApiConfig(); return false;" style="color: #667eea; font-size: 12px; text-decoration: none;">⚙️ Settings</a>
+        </div>
+
+        <div class="input-group">
+            <input type="url"
+                   id="videoUrl"
+                   placeholder="https://monari.com/... or direct video URL">
+            <div class="example">Supports: Monari pages, direct .m3u8/.mp4 URLs</div>
+        </div>
+
+        <div class="input-group">
+            <input type="password"
+                   id="password"
+                   placeholder="Enter password"
+                   style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px;">
+        </div>
+
+        <button class="btn" id="downloadBtn" onclick="downloadVideo()">
+            Download Video
+        </button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Toggle API configuration visibility
+        function toggleApiConfig() {
+            const apiConfig = document.querySelector('.api-config');
+            if (apiConfig.style.display === 'none') {
+                apiConfig.style.display = 'block';
+            } else {
+                apiConfig.style.display = 'none';
+            }
+        }
+
+        // Save API URL in localStorage
+        const apiUrlInput = document.getElementById('apiUrl');
+        const savedApiUrl = localStorage.getItem('apiUrl');
+        if (savedApiUrl) {
+            apiUrlInput.value = savedApiUrl;
+        }
+
+        apiUrlInput.addEventListener('change', () => {
+            localStorage.setItem('apiUrl', apiUrlInput.value);
+        });
+
+        let checkInterval;
+
+        async function downloadVideo() {
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+            const password = document.getElementById('password').value;
+            const status = document.getElementById('status');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            if (!apiUrl) {
+                showStatus('Please enter your Render API URL first!', 'error');
+                return;
+            }
+
+            if (!videoUrl) {
+                showStatus('Please enter a video URL', 'error');
+                return;
+            }
+
+            if (!password) {
+                showStatus('Please enter password', 'error');
+                return;
+            }
+
+            // Clean up API URL
+            const API_URL = apiUrl.replace(/\/$/, ''); // Remove trailing slash
+
+            downloadBtn.disabled = true;
+            showStatus('<div class="spinner"></div>Starting download...', 'processing');
+
+            try {
+                // Start download
+                const response = await fetch(`${API_URL}/download`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: videoUrl, password: password })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const downloadId = data.id;
+
+                // Check status every 2 seconds
+                showStatus('<div class="spinner"></div>Processing video...', 'processing');
+
+                checkInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetch(`${API_URL}/status/${downloadId}`);
+                        const statusData = await statusRes.json();
+
+                        if (statusData.status === 'completed') {
+                            clearInterval(checkInterval);
+                            downloadBtn.disabled = false;
+
+                            showStatus(`
+                                ✅ Video ready!<br>
+                                <a href="${API_URL}/file/${downloadId}"
+                                   class="download-btn"
+                                   download>
+                                    ⬇️ Download Video
+                                </a>
+                            `, 'success');
+
+                        } else if (statusData.status === 'failed') {
+                            clearInterval(checkInterval);
+                            downloadBtn.disabled = false;
+                            showStatus(`❌ Download failed: ${statusData.error || 'Unknown error'}`, 'error');
+
+                        } else {
+                            // Still processing
+                            const progress = statusData.progress || 0;
+                            showStatus(`
+                                <div class="spinner"></div>
+                                Processing... ${progress}%
+                            `, 'processing');
+                        }
+                    } catch (error) {
+                        clearInterval(checkInterval);
+                        downloadBtn.disabled = false;
+                        showStatus(`❌ Status check error: ${error.message}`, 'error');
+                    }
+                }, 2000);
+
+                // Timeout after 5 minutes
+                setTimeout(() => {
+                    if (checkInterval) {
+                        clearInterval(checkInterval);
+                        downloadBtn.disabled = false;
+                        showStatus('⏱️ Download timeout. Please try again.', 'error');
+                    }
+                }, 300000);
+
+            } catch (error) {
+                downloadBtn.disabled = false;
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = 'show ' + type;
+        }
+
+        // Handle Enter key
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                downloadVideo();
+            }
+        });
+    </script>
+</body>
+</html>

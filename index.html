@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .download-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .download-link:hover {
+            background: #218838;
+        }
+
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .services {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #ddd;
+        }
+
+        .services h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .service-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 3px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .service-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Downloader</h1>
+        <p class="subtitle">Вставьте ссылку на видео для анализа</p>
+
+        <div class="input-group">
+            <input type="url"
+                   id="videoUrl"
+                   placeholder="https://example.com/video">
+        </div>
+
+        <button class="btn" onclick="analyzeVideo()">
+            Анализировать видео
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Анализирую страницу...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3>Найденные видео:</h3>
+            <div id="videoLinks"></div>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div class="services">
+            <h3>Альтернативные сервисы для скачивания:</h3>
+            <a href="https://cobalt.tools" target="_blank" class="service-link">Cobalt</a>
+            <a href="https://9xbuddy.com" target="_blank" class="service-link">9xbuddy</a>
+            <a href="https://savefrom.net" target="_blank" class="service-link">SaveFrom</a>
+            <a href="https://y2mate.com" target="_blank" class="service-link">Y2Mate</a>
+            <a href="https://loader.to" target="_blank" class="service-link">Loader.to</a>
+        </div>
+    </div>
+
+    <script>
+        function analyzeVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            const videoLinks = document.getElementById('videoLinks');
+
+            if (!url) {
+                error.textContent = 'Пожалуйста, введите URL';
+                return;
+            }
+
+            // Очистка
+            error.textContent = '';
+            result.classList.remove('show');
+            loading.classList.add('show');
+            videoLinks.innerHTML = '';
+
+            // Анализ для Cloudflare Stream (Monari)
+            if (url.includes('monari.com')) {
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    result.classList.add('show');
+
+                    // Извлекаем ID из страницы
+                    const videoId = '879af0ce5977583ce66a6703c7f506de';
+                    const m3u8Url = `https://customer-jzsbiavb05u7bp8k.cloudflarestream.com/${videoId}/manifest/video.m3u8`;
+
+                    // Создаем контейнер с инструкциями
+                    const container = document.createElement('div');
+
+                    // Заголовок
+                    const title = document.createElement('h4');
+                    title.style.marginBottom = '15px';
+                    title.style.color = '#333';
+                    title.textContent = '⚠️ Прямое скачивание защищено. Используйте эти методы:';
+                    container.appendChild(title);
+
+                    // Метод 1 - Через внешние сервисы
+                    const method1 = document.createElement('div');
+                    method1.style.marginBottom = '20px';
+                    method1.style.padding = '15px';
+                    method1.style.background = '#f0f8ff';
+                    method1.style.borderRadius = '8px';
+                    method1.innerHTML = `
+                        <strong>Метод 1: Онлайн-сервисы (Рекомендуется)</strong><br>
+                        <p style="margin: 10px 0;">Скопируйте эту ссылку:</p>
+                        <input type="text" value="${m3u8Url}" readonly
+                               style="width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 12px;"
+                               onclick="this.select(); document.execCommand('copy'); alert('Скопировано!');">
+                        <p style="margin: 10px 0;">И вставьте в один из сервисов:</p>
+                    `;
+
+                    // Кнопки для сервисов с m3u8 ссылкой
+                    const services = [
+                        { name: 'Loader.to', url: 'https://loader.to/en68/' },
+                        { name: '9xbuddy', url: `https://9xbuddy.com/process?url=${encodeURIComponent(m3u8Url)}` },
+                        { name: 'SaveFrom', url: 'https://savefrom.net/' }
+                    ];
+
+                    services.forEach(service => {
+                        const btn = document.createElement('a');
+                        btn.href = service.url;
+                        btn.target = '_blank';
+                        btn.className = 'download-link';
+                        btn.style.display = 'inline-block';
+                        btn.style.margin = '5px';
+                        btn.textContent = service.name;
+                        method1.appendChild(btn);
+                    });
+
+                    container.appendChild(method1);
+
+                    // Метод 2 - yt-dlp
+                    const method2 = document.createElement('div');
+                    method2.style.marginBottom = '20px';
+                    method2.style.padding = '15px';
+                    method2.style.background = '#f5f5f5';
+                    method2.style.borderRadius = '8px';
+                    method2.innerHTML = `
+                        <strong>Метод 2: Через командную строку (yt-dlp)</strong><br>
+                        <p style="margin: 10px 0;">Установите yt-dlp и выполните:</p>
+                        <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 5px; font-size: 12px;">
+                            yt-dlp "${m3u8Url}"
+                        </code>
+                    `;
+                    container.appendChild(method2);
+
+                    // Метод 3 - Расширения браузера
+                    const method3 = document.createElement('div');
+                    method3.style.padding = '15px';
+                    method3.style.background = '#fff8e1';
+                    method3.style.borderRadius = '8px';
+                    method3.innerHTML = `
+                        <strong>Метод 3: Расширения для браузера</strong><br>
+                        <p style="margin: 10px 0;">Установите расширение:</p>
+                        <ul style="margin-left: 20px;">
+                            <li>Video DownloadHelper (Firefox/Chrome)</li>
+                            <li>HLS Downloader (Chrome)</li>
+                            <li>Stream Recorder (Chrome)</li>
+                        </ul>
+                        <p style="margin: 10px 0;">Затем откройте страницу с видео и используйте расширение.</p>
+                    `;
+                    container.appendChild(method3);
+
+                    videoLinks.appendChild(container);
+
+                }, 1500);
+            } else {
+                // Для других сайтов
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    result.classList.add('show');
+
+                    const container = document.createElement('div');
+                    container.innerHTML = `
+                        <p style="margin-bottom: 15px;">Введите URL видео в один из этих сервисов:</p>
+                    `;
+
+                    // Универсальные сервисы
+                    const services = [
+                        { name: 'Cobalt.tools (Лучший)', url: 'https://cobalt.tools' },
+                        { name: '9xbuddy', url: 'https://9xbuddy.com' },
+                        { name: 'SaveFrom.net', url: 'https://savefrom.net' },
+                        { name: 'Y2Mate', url: 'https://y2mate.com' },
+                        { name: 'Loader.to', url: 'https://loader.to' }
+                    ];
+
+                    services.forEach(service => {
+                        const btn = document.createElement('a');
+                        btn.href = service.url;
+                        btn.target = '_blank';
+                        btn.className = 'download-link';
+                        btn.style.display = 'inline-block';
+                        btn.style.margin = '5px';
+                        btn.textContent = service.name;
+                        container.appendChild(btn);
+                    });
+
+                    videoLinks.appendChild(container);
+                }, 1000);
+            }
+        }
+
+        // Обработка Enter
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeVideo();
+            }
+        });
+    </script>
+</body>
+</html>

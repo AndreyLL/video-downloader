@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Downloader Bookmarklet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; }
+        .bookmarklet {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .command {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Downloader Bookmarklet</h1>
+
+        <div class="instructions">
+            <h2>Установка:</h2>
+            <ol>
+                <li>Перетащите эту кнопку в закладки браузера:</li>
+            </ol>
+
+            <a href="javascript:(function(){const html=document.documentElement.innerHTML;const videos=[];const cloudflareRegex=/cloudflarestream\.com\/([a-f0-9]{32})/g;let match;while((match=cloudflareRegex.exec(html))!==null){const id=match[1];videos.push(`https://customer-jzsbiavb05u7bp8k.cloudflarestream.com/${id}/manifest/video.m3u8`);}document.querySelectorAll('video').forEach(v=>{if(v.src)videos.push(v.src);v.querySelectorAll('source').forEach(s=>{if(s.src)videos.push(s.src);});});if(videos.length>0){const div=document.createElement('div');div.style.cssText='position:fixed;top:20px;right:20px;background:white;padding:20px;border:2px solid #667eea;border-radius:10px;z-index:9999;max-width:400px;box-shadow:0 5px 15px rgba(0,0,0,0.3)';div.innerHTML='<h3 style=&quot;margin:0 0 10px 0&quot;>Найдено видео:</h3>';videos.forEach((url,i)=>{const p=document.createElement('p');p.style.cssText='background:#f0f0f0;padding:10px;border-radius:5px;word-break:break-all;font-size:12px;cursor:pointer';p.textContent=url;p.onclick=()=>{navigator.clipboard.writeText(url);p.style.background='#d4edda';p.textContent='Скопировано: '+url;};div.appendChild(p);});const close=document.createElement('button');close.textContent='Закрыть';close.style.cssText='background:#667eea;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;margin-top:10px';close.onclick=()=>div.remove();div.appendChild(close);document.body.appendChild(div);}else{alert('Видео не найдено на странице');}})();" class="bookmarklet">
+                🎬 Find Videos
+            </a>
+        </div>
+
+        <div class="instructions">
+            <h2>Использование:</h2>
+            <ol>
+                <li>Откройте страницу с видео (например, Monari)</li>
+                <li>Нажмите на закладку "Find Videos"</li>
+                <li>Появится окно со списком найденных видео</li>
+                <li>Кликните на URL чтобы скопировать</li>
+                <li>Используйте yt-dlp для скачивания</li>
+            </ol>
+        </div>
+
+        <div class="instructions">
+            <h2>Скачивание через yt-dlp:</h2>
+            <p>После копирования ссылки, используйте команду:</p>
+            <div class="command">
+                yt-dlp "ВСТАВЬТЕ_ССЫЛКУ_ЗДЕСЬ"
+            </div>
+
+            <p><strong>Установка yt-dlp:</strong></p>
+            <div class="command">
+                pip install yt-dlp
+            </div>
+        </div>
+    </div>
+</body>
+</html>
